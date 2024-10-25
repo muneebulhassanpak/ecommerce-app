@@ -1,1 +1,7 @@
 todos.txt
+backend/.env
+backend/node_modules
+frontend/node_modules
+.gitignore
+
+
