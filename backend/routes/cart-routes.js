@@ -1,5 +1,5 @@
 const express = require("express");
-const { body } = require("express-validator");
+const { body, param } = require("express-validator");
 
 const router = express.Router();
 const {
@@ -12,23 +12,16 @@ const normalverify = require("../middleware/auth/user-guard");
 const validateRequest = require("../middleware/input-validation-responder");
 
 router.post(
-  "/add/:id",
+  "/add",
   verify,
   normalverify,
   [
-    param("id").isMongoId().withMessage("Invalid product ID"),
+    body("productId").isMongoId().withMessage("Invalid product ID"),
     body("price")
       .notEmpty()
       .withMessage("Price is required")
       .isNumeric({ gt: 0 })
       .withMessage("Price must be a positive integer greater than 0"),
-    body("quantity")
-      .notEmpty()
-      .withMessage("Product Quantity is required")
-      .isInt({ gt: 0 })
-      .withMessage(
-        "Product Quantity must be a positive integer greater than 0"
-      ),
   ],
   validateRequest,
   addToCartController

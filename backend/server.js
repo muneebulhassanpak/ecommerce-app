@@ -22,17 +22,20 @@ app.use(
 
 const authRoutes = require("./routes/auth-routes");
 const productRoutes = require("./routes/product-routes");
+const cartRoutes = require("./routes/cart-routes");
+const orderRoutes = require("./routes/order-routes");
+const { generateResponseWithoutPayload } = require("./utils/response-helpers");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use((err, req, res, next) => {
   const code = err.status || 500;
-  return res.status(code).json({
-    success: false,
-    message: err.message || "Something went wrong",
-    status: code,
-  });
+  const message = err.message || "Something went wrong";
+  const response = generateResponseWithoutPayload(code, false, message);
+  return res.status(code).json(response);
 });
 
 const PORT = process.env.PORT;

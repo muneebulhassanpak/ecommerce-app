@@ -87,7 +87,9 @@ exports.deleteProductController = async (req, res, next) => {
 
 exports.getAllProductsController = async (req, res, next) => {
   try {
-    const { page = 1, pageSize = 10, minPrice, maxPrice, rating } = req.query;
+    const { page = 1, pageSize = 12, minPrice, maxPrice, rating } = req.query;
+
+    console.log("servers", page, pageSize, minPrice, maxPrice, rating);
 
     const pageNumber = parseInt(page);
     const pageSizeNumber = parseInt(pageSize);
@@ -103,7 +105,7 @@ exports.getAllProductsController = async (req, res, next) => {
       }
     }
     if (rating) {
-      filter.rating = { $gte: rating };
+      filter.rating = { $eq: rating };
     }
 
     const products = await Product.find(filter)
@@ -117,7 +119,7 @@ exports.getAllProductsController = async (req, res, next) => {
       message: "Products retrieved successfully",
       data: products,
       pagination: {
-        totalProducts,
+        totalEntries: totalProducts,
         currentPage: pageNumber,
         pageSize: pageSizeNumber,
         totalPages: Math.ceil(totalProducts / pageSizeNumber),

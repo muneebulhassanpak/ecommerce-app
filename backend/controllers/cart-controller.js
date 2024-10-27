@@ -10,10 +10,11 @@ const {
 
 exports.addToCartController = async (req, res, next) => {
   try {
-    const productId = req.params.id;
+    const { productId } = req.body;
     const user = req.user;
 
     const product = await Product.findById(productId);
+
     if (!product) {
       throw new CustomError(404, "No product found");
     }
@@ -23,7 +24,7 @@ exports.addToCartController = async (req, res, next) => {
     if (!cart) {
       cart = new Cart({
         user: user._id,
-        items: [{ product: product._id, quantity: 1 }],
+        items: [{ product: product._id, quantity: 1, price: product.price }],
       });
     } else {
       const productIndex = cart.items.findIndex(
@@ -33,9 +34,17 @@ exports.addToCartController = async (req, res, next) => {
       if (productIndex > -1) {
         cart.items[productIndex].quantity += 1;
       } else {
-        cart.items.push({ product: product._id, quantity: 1 });
+        cart.items.push({
+          product: product._id,
+          quantity: 1,
+          price: product.price,
+        });
       }
     }
+
+    cart.totalAmount = cart.items.reduce((total, item) => {
+      return total + item.price * item.quantity; // Sum price * quantity for each item
+    }, 0);
 
     await cart.save();
 
@@ -103,7 +112,7 @@ exports.getCartController = async (req, res, next) => {
       200,
       true,
       "Cart retrieved successfully",
-      { items: cart.items }
+      cart.items
     );
     return res.status(200).json(response);
   } catch (error) {

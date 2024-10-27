@@ -1,5 +1,5 @@
-import { SignupForm } from "@/components/auth/signup";
-import { LoginForm } from "@/components/auth/login";
+import SignupForm from "@/components/auth/signup";
+import LoginForm from "@/components/auth/login";
 import { useLocation } from "react-router-dom";
 
 const Auth = () => {

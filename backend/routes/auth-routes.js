@@ -6,6 +6,7 @@ const {
   loginController,
   signupController,
   fetchingController,
+  updateProfileController,
 } = require("../controllers/auth-controller");
 const verify = require("../middleware/auth/jwt-guard");
 const normalverify = require("../middleware/auth/user-guard");
@@ -58,5 +59,7 @@ router.post(
 );
 
 router.get("/getData", verify, normalverify, fetchingController);
+
+router.put("/profile", verify, normalverify, updateProfileController);
 
 module.exports = router;

@@ -6,35 +6,27 @@ const {
   createOrderController,
   viewAllOrdersOfAPersonController,
   viewAllOrdersOnPlatformController,
+  approveOrRejectOrderController,
 } = require("../controllers/order-controller");
 const verify = require("../middleware/auth/jwt-guard");
 const normalverify = require("../middleware/auth/user-guard");
+const adminverify = require("../middleware/auth/admin-guard");
 const validateRequest = require("../middleware/input-validation-responder");
 
 router.get("/place-order", verify, normalverify, createOrderController);
 
-router.put(
+router.get(
   "/view-orders",
   verify,
   normalverify,
   viewAllOrdersOfAPersonController
 );
 
-router.put(
-  "/order-actions",
+router.get(
+  "/orderActions/:orderId",
   verify,
   normalverify,
   adminverify,
-  [
-    body("status")
-      .notEmpty()
-      .withMessage("Status is required")
-      .isIn(["pending", "in-process", "declined"])
-      .withMessage(
-        "Status must be either 'pending' or 'in-process' or 'declined'"
-      ),
-  ],
-  validateRequest,
   approveOrRejectOrderController
 );
 

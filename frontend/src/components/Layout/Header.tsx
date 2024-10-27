@@ -1,15 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
+import { Button } from "../ui/button";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "@/store/userSlice";
+import Cookies from "js-cookie";
+import { RootState } from "@/store/store";
 
-const navigation = [
+let navigation = [
   { name: "Shop", href: "/shop" },
   { name: "Dashboard", href: "/dashboard" },
+  { name: "Cart", href: "/cart" },
 ];
 
 export default function Header() {
+  const isLoggedIn = useSelector((state: RootState) => state.user.isLoggedIn);
+  const role = useSelector((state: RootState) => state.user.user.role);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const dispatch = useDispatch();
+  const [nav, setNav] = useState(navigation);
+
+  const logoutUser = () => {
+    Cookies.remove("access_token");
+    dispatch(logout());
+  };
+
+  useEffect(() => {
+    const updatedNav = navigation
+      .filter((item) => item.name !== "Cart" || role !== "admin")
+      .map((item) =>
+        item.name === "Dashboard"
+          ? {
+              ...item,
+              href: role === "admin" ? "/dashboard" : "/dashboard/orders",
+            }
+          : item
+      );
+
+    setNav(isLoggedIn ? updatedNav : [{ name: "Shop", href: "/shop" }]);
+  }, [isLoggedIn, role]);
 
   return (
     <header className="absolute inset-x-0 top-0 z-50 max-w-7xl mx-auto">
@@ -38,7 +68,7 @@ export default function Header() {
           </button>
         </div>
         <div className="hidden lg:flex lg:gap-x-12">
-          {navigation.map((item) => (
+          {nav.map((item) => (
             <Link
               key={item.name}
               to={item.href}
@@ -49,18 +79,26 @@ export default function Header() {
           ))}
         </div>
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          <Link
-            to="/signup"
-            className="text-sm mr-2 font-semibold leading-6 bg-primary text-primary-foreground hover:bg-primary/90  rounded-md px-4 py-2"
-          >
-            Signup
-          </Link>
-          <Link
-            to="/login"
-            className="text-sm font-semibold leading-6 bg-primary text-primary-foreground hover:bg-primary/90  rounded-md px-4 py-2"
-          >
-            Log in
-          </Link>
+          {!isLoggedIn ? (
+            <>
+              <Link
+                to="/signup"
+                className="text-sm font-semibold leading-6 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2"
+              >
+                Signup
+              </Link>
+              <Link
+                to="/login"
+                className="mx-2 text-sm font-semibold leading-6 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-4 py-2"
+              >
+                Log in
+              </Link>
+            </>
+          ) : (
+            <Button variant="destructive" onClick={logoutUser}>
+              Log out
+            </Button>
+          )}
         </div>
       </nav>
       <Dialog
@@ -71,14 +109,14 @@ export default function Header() {
         <div className="fixed inset-0 z-50" />
         <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
           <div className="flex items-center justify-between">
-            <a href="#" className="-m-1.5 p-1.5">
+            <Link to="/" className="-m-1.5 p-1.5">
               <span className="sr-only">Your Company</span>
               <img
                 alt=""
                 src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=600"
                 className="h-8 w-auto"
               />
-            </a>
+            </Link>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
@@ -91,7 +129,7 @@ export default function Header() {
           <div className="mt-6 flow-root">
             <div className="-my-6 divide-y divide-gray-500/10">
               <div className="space-y-2 py-6">
-                {navigation.map((item) => (
+                {nav.map((item) => (
                   <Link
                     key={item.name}
                     to={item.href}
@@ -102,18 +140,26 @@ export default function Header() {
                 ))}
               </div>
               <div className="py-6">
-                <Link
-                  to="/signup"
-                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                >
-                  Signup
-                </Link>
-                <Link
-                  to="/login"
-                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                >
-                  Log in
-                </Link>
+                {!isLoggedIn ? (
+                  <>
+                    <Link
+                      to="/signup"
+                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    >
+                      Signup
+                    </Link>
+                    <Link
+                      to="/login"
+                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    >
+                      Log in
+                    </Link>
+                  </>
+                ) : (
+                  <Button variant="destructive" onClick={logoutUser}>
+                    Log out
+                  </Button>
+                )}
               </div>
             </div>
           </div>

@@ -1,5 +1,10 @@
 const Order = require("../models/order");
 const Cart = require("../models/cart");
+const {
+  generateResponseWithoutPayload,
+  generateResponseWithPayload,
+} = require("../utils/response-helpers");
+const CustomError = require("../utils/error");
 
 exports.createOrderController = async (req, res, next) => {
   try {
@@ -13,18 +18,13 @@ exports.createOrderController = async (req, res, next) => {
       throw new CustomError(400, "Cart is empty, cannot place an order");
     }
 
-    let totalAmount = 0;
-    cart.items.forEach((item) => {
-      totalAmount += item.product.price * item.quantity;
-    });
-
     const newOrder = await Order.create({
       user: user._id,
       items: cart.items.map((item) => ({
         product: item.product._id,
         quantity: item.quantity,
       })),
-      totalAmount,
+      totalAmount: cart.totalAmount,
       paymentDetails: req.body.paymentDetails || {},
     });
 
@@ -82,21 +82,31 @@ exports.viewAllOrdersOnPlatformController = async (req, res, next) => {
       status,
     } = req.query;
 
+    const pageNumber = parseInt(page);
+    const pageSizeNumber = parseInt(pageSize);
+
     const filter = status ? { status } : {};
 
     const orders = await Order.find(filter)
       .sort({ [sortBy]: sortOrder === "desc" ? -1 : 1 })
-      .skip((page - 1) * pageSize)
-      .limit(parseInt(pageSize))
+      .skip((pageNumber - 1) * pageSizeNumber)
+      .limit(pageSizeNumber)
       .populate("user", "name email")
       .populate("items.product");
 
-    const response = generateResponseWithPayload(
-      200,
-      true,
-      "All platform orders retrieved successfully",
-      orders
-    );
+    const totalOrders = await Order.countDocuments(filter);
+
+    const response = {
+      success: true,
+      message: "All platform orders retrieved successfully",
+      data: orders,
+      pagination: {
+        totalEntries: totalOrders,
+        currentPage: pageNumber,
+        pageSize: pageSizeNumber,
+        totalPages: Math.ceil(totalOrders / pageSizeNumber),
+      },
+    };
 
     return res.status(200).json(response);
   } catch (error) {
@@ -107,16 +117,13 @@ exports.viewAllOrdersOnPlatformController = async (req, res, next) => {
 exports.approveOrRejectOrderController = async (req, res, next) => {
   try {
     const { orderId } = req.params;
-    const { status } = req.body;
-
-    if (!["pending", "in-process", "declined"].includes(status)) {
-      throw new CustomError(
-        400,
-        "Invalid status. Must be either 'in-process' or 'declined'"
-      );
-    }
+    const { status } = req.query;
 
     const order = await Order.findById(orderId);
+
+    if (!["in-process", "declined"].includes(status)) {
+      throw new CustomError(400, "Invalid order status");
+    }
 
     if (!order) {
       throw new CustomError(404, "Order not found");

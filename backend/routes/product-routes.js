@@ -50,10 +50,6 @@ router.post(
       .withMessage("Stock is required")
       .isInt({ gt: 0 })
       .withMessage("Stock must be a positive integer greater than 0"),
-    body("rating")
-      .optional()
-      .isNumeric()
-      .withMessage("Rating must be a number"),
   ],
   validateRequest,
   createProductController

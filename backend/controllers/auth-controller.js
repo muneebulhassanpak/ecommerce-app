@@ -63,7 +63,7 @@ exports.loginController = async (req, res, next) => {
     const payloadData = {
       name: existingUser.name,
       role: existingUser.role,
-      profilePicture: existingUser.profilePicture,
+      email: existingUser.email,
     };
     const response = generateResponseWithPayload(
       200,
@@ -83,7 +83,7 @@ exports.fetchingController = async (req, res, next) => {
     const payloadData = {
       name: user.name,
       role: user.role,
-      profilePicture: user.profilePicture,
+      email: user.email,
     };
     const response = generateResponseWithPayload(
       200,
@@ -99,21 +99,25 @@ exports.fetchingController = async (req, res, next) => {
 
 exports.updateProfileController = async (req, res, next) => {
   try {
-    const { name, email, profilePicture } = req.body;
+    const { name, email } = req.body;
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      throw new CustomError(400, "A user with the same email already exists");
-    }
+
     existingUser.name = name;
     existingUser.email = email;
-    existingUser.profilePicture = profilePicture;
 
     await existingUser.save();
 
-    const response = generateResponseWithoutPayload(
+    const payloadData = {
+      name: existingUser.name,
+      role: existingUser.role,
+      email: existingUser.email,
+    };
+
+    const response = generateResponseWithPayload(
       200,
       true,
-      "Profile updated successfully"
+      "Profile updated successfully",
+      payloadData
     );
 
     return res.status(200).json(response);
