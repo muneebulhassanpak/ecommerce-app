@@ -18,6 +18,21 @@ exports.createOrderController = async (req, res, next) => {
       throw new CustomError(400, "Cart is empty, cannot place an order");
     }
 
+    for (let item of cart.items) {
+      const product = item.product;
+      const requestedQuantity = item.quantity;
+
+      if (product.stock < requestedQuantity) {
+        throw new CustomError(
+          400,
+          `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${requestedQuantity}`
+        );
+      }
+
+      product.stock -= requestedQuantity;
+      await product.save();
+    }
+
     const newOrder = await Order.create({
       user: user._id,
       items: cart.items.map((item) => ({
