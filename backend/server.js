@@ -26,6 +26,10 @@ const cartRoutes = require("./routes/cart-routes");
 const orderRoutes = require("./routes/order-routes");
 const { generateResponseWithoutPayload } = require("./utils/response-helpers");
 
+app.use("/", (req, res, next) => {
+  return res.send("Welcome to Ecommerce API");
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/cart", cartRoutes);
